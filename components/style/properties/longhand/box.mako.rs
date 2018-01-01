@@ -738,7 +738,7 @@ ${helpers.predefined_type("transform-origin",
 
 ${helpers.predefined_type("contain",
                           "Contain",
-                          "/* call to initial val or Contain::empty() */",
+                          "specified::Contain::empty()",
                           animation_value_type="discrete",
                           products="gecko",
                           flags="FIXPOS_CB",
@@ -753,7 +753,7 @@ ${helpers.predefined_type("contain",
 //                    gecko_pref="layout.css.contain.enabled",
 //                    spec="https://drafts.csswg.org/css-contain/#contain-property">
 //     use std::fmt;
-//     use style_traits::ToCss;
+
 
 //     pub mod computed_value {
 //         pub type T = super::SpecifiedValue;
