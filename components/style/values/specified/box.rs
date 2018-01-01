@@ -361,10 +361,10 @@ impl Parse for Contain {
     }
 }
 
-impl Contain {
-    /// Get the default contain value as Self::empty()
-    #[inline]
-    pub fn get_initial_value() -> Self {
-        Self::empty()
-    }
-}
+// impl Contain {
+//     /// Get the default contain value as Self::empty()
+//     #[inline]
+//     pub fn get_initial_value() -> Self {
+//         Self::empty()
+//     }
+// }
