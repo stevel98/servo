@@ -7,8 +7,9 @@
 use Atom;
 use cssparser::Parser;
 use parser::{Parse, ParserContext};
+use selectors::parser::SelectorParseErrorKind;
 use std::fmt;
-use style_traits::{ParseError, ToCss};
+use style_traits::{ParseError, ToCss, StyleParseErrorKind};
 use values::CustomIdent;
 use values::KeyframesName;
 use values::generics::box_::AnimationIterationCount as GenericAnimationIterationCount;
@@ -274,5 +275,96 @@ pub fn assert_touch_action_matches() {
         NS_STYLE_TOUCH_ACTION_PAN_X => TouchAction::TOUCH_ACTION_PAN_X,
         NS_STYLE_TOUCH_ACTION_PAN_Y => TouchAction::TOUCH_ACTION_PAN_Y,
         NS_STYLE_TOUCH_ACTION_MANIPULATION => TouchAction::TOUCH_ACTION_MANIPULATION,
+    }
+}
+
+bitflags! {
+    #[derive(MallocSizeOf, ToComputedValue)]
+    /// Constants for contain: https://drafts.csswg.org/css-contain/#contain-property
+    pub struct Contain: u8 {
+        /// `layout` variant, turns on layout containment
+        const LAYOUT = 0x01;
+        /// `style` variant, turns on style containment
+        const STYLE = 0x02;
+        /// `paint` variant, turns on paint containment
+        const PAINT = 0x04;
+        /// `strict` variant, turns on all types of containment
+        const STRICT = 0x8;
+        /// `strict bits` variant
+        const STRICT_BITS = Contain::LAYOUT.bits | Contain::STYLE.bits | Contain::PAINT.bits;
+    }
+}
+
+impl ToCss for Contain {
+    fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
+        if self.is_empty() {
+            return dest.write_str("none")
+        }
+        if self.contains(Contain::STRICT) {
+            return dest.write_str("strict")
+        }
+
+        let mut has_any = false;
+        macro_rules! maybe_write_value {
+            ($ident:path => $str:expr) => {
+                if self.contains($ident) {
+                    if has_any {
+                        dest.write_str(" ")?;
+                    }
+                    has_any = true;
+                    dest.write_str($str)?;
+                }
+            }
+        }
+        maybe_write_value!(Contain::LAYOUT => "layout");
+        maybe_write_value!(Contain::STYLE => "style");
+        maybe_write_value!(Contain::PAINT => "paint");
+
+        debug_assert!(has_any);
+        Ok(())
+    }
+}
+
+impl Parse for Contain {
+    /// none | strict | content | [ size || layout || style || paint ]
+    fn parse<'i, 't>(_context: &ParserContext, input: &mut Parser<'i, 't>)
+                         -> Result<Contain, ParseError<'i>> {
+        let mut result = Contain::empty();
+
+        if input.try(|input| input.expect_ident_matching("none")).is_ok() {
+            return Ok(result)
+        }
+        if input.try(|input| input.expect_ident_matching("strict")).is_ok() {
+            result.insert(Contain::STRICT | Contain::STRICT_BITS);
+            return Ok(result)
+        }
+
+        while let Ok(name) = input.try(|i| i.expect_ident_cloned()) {
+            let flag = match_ignore_ascii_case! { &name,
+                "layout" => Some(Contain::LAYOUT),
+                "style" => Some(Contain::STYLE),
+                "paint" => Some(Contain::PAINT),
+                _ => None
+            };
+            let flag = match flag {
+                Some(flag) if !result.contains(flag) => flag,
+                _ => return Err(input.new_custom_error(SelectorParseErrorKind::UnexpectedIdent(name.clone())))
+            };
+            result.insert(flag);
+        }
+
+        if !result.is_empty() {
+            Ok(result)
+        } else {
+            Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
+        }
+    }
+}
+
+impl Contain {
+    /// Get the default contain value as Self::empty()
+    #[inline]
+    pub fn get_initial_value() -> Self {
+        Self::empty()
     }
 }
