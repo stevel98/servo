@@ -7,9 +7,9 @@
 use Atom;
 use cssparser::Parser;
 use parser::{Parse, ParserContext};
-use selectors::parser::SelectorParseErrorKind;
 #[cfg(feature = "servo")]
 use properties::{longhands, PropertyDeclaration};
+use selectors::parser::SelectorParseErrorKind;
 use std::fmt;
 use style_traits::{ParseError, ToCss, StyleParseErrorKind};
 use values::CustomIdent;
