@@ -39,7 +39,8 @@ pub use self::box_::{OverflowClipBox, ScrollSnapType, TouchAction, VerticalAlign
 pub use self::color::{Color, ColorPropertyValue, RGBAColor};
 pub use self::effects::{BoxShadow, Filter, SimpleShadow};
 pub use self::flex::FlexBasis;
-// pub use self::gecko::ScrollSnapPoint;
+#[cfg(feature = "gecko")]
+pub use self::gecko::ScrollSnapPoint;
 pub use self::image::{ColorStop, EndingShape as GradientEndingShape, Gradient};
 pub use self::image::{GradientItem, GradientKind, Image, ImageLayer, MozImageRect};
 pub use self::length::{AbsoluteLength, CalcLengthOrPercentage, CharacterWidth};
